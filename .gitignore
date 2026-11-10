@@ -1,0 +1,50 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+
+# --- Secrets (never commit these) ---
+.env
+*.pem
+*.key
+secrets/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Data (document how to regenerate or download it instead) ---
+data/
+*.csv
+*.parquet
+*.db
+*.sqlite
+
+# --- Models and training artifacts ---
+models/
+checkpoints/
+outputs/
+adapters/
+*.safetensors
+*.bin
+*.pt
+*.gguf
+wandb/
+runs/
+logs/
+
+# --- Hugging Face / caches ---
+.cache/
+huggingface/
+
+# --- Editors and OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
