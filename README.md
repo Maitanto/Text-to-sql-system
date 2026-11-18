@@ -1,6 +1,6 @@
 # Text-to-SQL LLM
 
-> 🚧 **Status: work in progress.** Started in November 2026 and actively developed.
+> **Status: work in progress.** Started in November 2026 and actively developed.
 > Last updated: 2026-11-18. See the [roadmap](#roadmap) for what is done and what comes next.
 
 An end-to-end pipeline that translates natural-language questions into SQL queries, given the schema of a database. The core of the project is fine-tuning **Llama 3 8B** with **LoRA** so that the model learns to *read the schema it is given* instead of memorizing specific tables.
