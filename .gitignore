@@ -10,7 +10,7 @@ dist/
 venv/
 env/
 
-# --- Secrets (never commit these) ---
+# --- Confidentials ---
 .env
 *.pem
 *.key
