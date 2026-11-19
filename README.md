@@ -43,8 +43,8 @@ Two PostgreSQL databases are used so the model sees different schemas. They are 
 | Table | Description |
 |---|---|
 | `customers` | login (PK), name, age, gender, address, company name (if representing a company) |
-| `products` | name (PK), category, price, release date, cost of production |
-| `transactions` | id (PK), product, customer, date, amount paid, quantity |
+| `products` | name (PK), price, release date, cost of production |
+| `transactions` | id (PK), product, customer, date, quantity |
 
 **`subscriptions`**
 
