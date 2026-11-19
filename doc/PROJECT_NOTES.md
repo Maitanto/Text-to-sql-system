@@ -4,17 +4,17 @@
 
 Products - Customers - transactions
 
-The customers are defined by a unique id, name, gender, age, adress, company name(if representing a company)
+The customers are defined by a unique id, first name, last name, gender, age, adress, company name(if representing a company)
 
-Products would be associated to a name, category, a price, release_date, 
+Products would be associated to a name, a price, release_date, 
 
-Transactions have an unique id, a product, customer_id, date, the amount payed for the product, cost_of_production, quantity sold
+Transactions have an unique id, a product, customer_id, date, cost_of_production, quantity sold
 
 ## Second mock database model:
 
 Users - Subscriptions - Payments - Plans
 
-Users have an unique id, name, gender, age, signup_date
+Users have an unique id, first name, last name, gender, age, signup_date
 
 Subscriptions have an id, user id, start date, end date(null while active so date only appears when subscription ends), plans name
 
