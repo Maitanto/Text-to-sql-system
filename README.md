@@ -51,7 +51,7 @@ Two PostgreSQL databases are used so the model sees different schemas. They are 
 | Table           | Description                                                         |
 | --------------- | ------------------------------------------------------------------- |
 | `users`         | login (PK), name, age, gender, signup date                          |
-| `plans`         | name (PK), price, billing period (daily … annual, one-time)         |
+| `plans`         | name (PK), price, billing period (monthly, annual)         |
 | `subscriptions` | id (PK), user, start date, end date (`NULL` while active), plan     |
 | `payments`      | id (PK), subscription, amount, payment method, status, payment date |
 
