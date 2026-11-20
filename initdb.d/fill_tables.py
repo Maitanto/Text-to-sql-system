@@ -40,7 +40,7 @@ def generate_customers(count: int) -> list[tuple]:
     return customers
 
 
-def generate_products(count: int) -> list[tuple]:
+def generate_products() -> list[tuple]:
 
     products = []
     prod_names = ["Monitor", "Keyboard", "Mouse", "Webcam", "Router", "SSD",
@@ -63,13 +63,14 @@ def generate_products(count: int) -> list[tuple]:
 def generate_transactions(count: int, customers: list[tuple], products: list[tuple]) -> list[tuple]:
     transactions = []
     for i in range(count):
-        parent_date = products[random.randint(0, len(products)-1)][2]
+        product = products[random.randint(0, len(products)-1)]
+        parent_date = product[2]
         child_date = fake.date_between_dates(
             date_start=parent_date,
             date_end=SNAPSHOT_DATE,
         )
         transactions.append((fake.unique.uuid4(),
-                             products[random.randint(0, len(products)-1)][0],
+                             product[0],
                              customers[random.randint(0, len(customers)-1)][0],
                              child_date,
                              random.randint(1, 1000)))
@@ -103,8 +104,8 @@ def generate_plans() -> list[tuple]:
         ('Basic Annual', 139.08, 'annual'),
         ('Complete Monthly', 19.21, 'monthly'),
         ('Complete Annual', 219.48, 'annual'),
-        ('Prenium Monthly', 29.19, 'monthly'),
-        ('Prenium Annual', 338.28, 'annual')
+        ('Premium Monthly', 29.19, 'monthly'),
+        ('Premium Annual', 338.28, 'annual')
     ]
     return plans
 
@@ -112,7 +113,8 @@ def generate_plans() -> list[tuple]:
 def generate_subscriptions(count: int, users: list[tuple], plans: list[tuple]) -> list[tuple]:
     subscriptions = []
     for i in range(count):
-        parent_date = users[random.randint(0, len(users)-1)][5]
+        user = users[random.randint(0, len(users)-1)]
+        parent_date = user[5]
         child_date = fake.date_between_dates(
             date_start=parent_date,
             date_end=SNAPSHOT_DATE,
@@ -125,7 +127,7 @@ def generate_subscriptions(count: int, users: list[tuple], plans: list[tuple]) -
         )
 
         subscriptions.append((fake.unique.uuid4(),
-                              users[random.randint(0,len(users)-1)][0],
+                              user[0],
                               child_date,
                               child_date2 if random.random() > 0.5 else None,
                               plans[random.randint(0, len(plans)-1)][0]))
@@ -137,16 +139,17 @@ def generate_payments(count: int, subscriptions: list[tuple], plans: list[tuple]
     p_methods = ['card', 'bank_transfer', 'paypal', 'apple_pay', 'google_pay', 'cash']
     status = ['paid', 'pending', 'cancelled', 'failed', 'refunded']
     for i in range(count):
-        parent_date = subscriptions[random.randint(0, len(subscriptions)-1)][2]
+        subscription = subscriptions[random.randint(0, len(subscriptions)-1)]
+        parent_date = subscription[2]
         child_date = fake.date_between_dates(
             date_start=parent_date,
             date_end=SNAPSHOT_DATE,
         )
+        
         payments.append((fake.unique.uuid4(),
-                         subscriptions[random.randint(0, len(subscriptions)-1)][0],
-                         round(random.uniform(1.00, 9999.99), 2),
+                         subscription[0],
                          p_methods[random.randint(0, len(p_methods)-1)],
-                         status[0] if random.random() > 0.8 else status[random.randint(1, len(status)-1)],
+                         status[0] if random.random() > 0.2 else status[random.randint(1, len(status)-1)],
                          child_date
                          ))
     return payments
@@ -161,7 +164,7 @@ def populate_transactions_db():
     try:
         with conn.cursor() as cur:
             customers = generate_customers(10000)
-            products = generate_products(500)
+            products = generate_products()
             transactions = generate_transactions(20000, customers, products)
             cur.execute("TRUNCATE TABLE TRANSACTIONS, CUSTOMERS, PRODUCTS CASCADE;")
             cur.executemany("INSERT INTO CUSTOMERS (LOGIN, FIRST_NAME, LAST_NAME, AGE, GENDER, ADDRESS, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)", customers)
@@ -188,7 +191,7 @@ def populate_subscriptions_db():
             cur.executemany("INSERT INTO USERS (LOGIN, FIRST_NAME, LAST_NAME, AGE, GENDER, SIGNUP_DATE) VALUES (%s, %s, %s, %s, %s, %s)", users)
             cur.executemany("INSERT INTO PLANS (NAME, PRICE, BILLING_PERIOD) VALUES (%s, %s, %s)", plans)
             cur.executemany("INSERT INTO SUBSCRIPTIONS (ID, USER_LOGIN, START_DATE, END_DATE, PLANS_NAME) VALUES (%s, %s, %s, %s, %s)", subscriptions)
-            cur.executemany("INSERT INTO PAYMENTS (ID, SUBSCRIPTION_ID, AMOUNT, PAYMENT_METHOD, STATUS, PAYMENT_DATE) VALUES (%s, %s, %s, %s, %s, %s)", payments)
+            cur.executemany("INSERT INTO PAYMENTS (ID, SUBSCRIPTION_ID, PAYMENT_METHOD, STATUS, PAYMENT_DATE) VALUES (%s, %s, %s, %s, %s)", payments)
 
         conn.commit()
         print("subscriptions DB populated successfully.")

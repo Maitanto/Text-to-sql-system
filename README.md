@@ -53,7 +53,7 @@ Two PostgreSQL databases are used so the model sees different schemas. They are 
 | `users`         | login (PK), name, age, gender, signup date                          |
 | `plans`         | name (PK), price, billing period (monthly, annual)         |
 | `subscriptions` | id (PK), user, start date, end date (`NULL` while active), plan     |
-| `payments`      | id (PK), subscription, amount, payment method, status, payment date |
+| `payments`      | id (PK), subscription, payment method, status, payment date |
 
 Design choices: natural keys, `CHECK` constraints on prices, quantities and enumerated values (payment status, billing period, payment method), and PostgreSQL rather than SQLite to work with a realistic database engine.
 

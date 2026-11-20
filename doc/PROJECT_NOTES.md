@@ -18,7 +18,7 @@ Users have an unique id, first name, last name, gender, age, signup_date
 
 Subscriptions have an id, user id, start date, end date(null while active so date only appears when subscription ends), plans name
 
-Payments have an unique id, a subscription id, an amount, payment method, a status, payment date
+Payments have an unique id, a subscription id, payment method, a status, payment date
 
 Plans have a name, price, billing period
 
