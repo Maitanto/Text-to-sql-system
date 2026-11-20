@@ -18,7 +18,7 @@ An end-to-end pipeline that translates natural-language questions into SQL queri
 - [x] PostgreSQL environment with Docker Compose (one container, two databases)
 - [x] Table definitions for both databases (`initdb.d/`)
 - [x] Populate the mock databases with data
-- [ ] Write a set of reference queries (`queries.sql`)
+- [x] Write a set of reference queries (`queries_for_training.sql`)
 - [ ] Generate the synthetic training dataset (schema, question, SQL) and validate it by execution
 - [ ] LoRA fine-tuning of Llama 3 8B (model + LoRA adapter setup started in `data_to_sql.py`)
 - [ ] Evaluation: base model vs. fine-tuned model (execution accuracy, held-out schema)
