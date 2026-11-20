@@ -1,0 +1,6 @@
+-- Here we make sure that: - Transactions dated before their product’s release date.
+
+SELECT T.ID, T.PRODUCT_NAME, T.DATE_OF_TRANSACTION, P.RELEASE_DATE FROM TRANSACTIONS T 
+JOIN PRODUCTS P
+ON T.PRODUCT_NAME = P.NAME
+WHERE P.RELEASE_DATE > T.DATE_OF_TRANSACTION;

@@ -143,7 +143,7 @@ def generate_payments(count: int, subscriptions: list[tuple], plans: list[tuple]
         parent_date = subscription[2]
         child_date = fake.date_between_dates(
             date_start=parent_date,
-            date_end=SNAPSHOT_DATE,
+            date_end=subscription[3],
         )
         
         payments.append((fake.unique.uuid4(),
