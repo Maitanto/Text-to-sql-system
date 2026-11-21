@@ -1,7 +1,7 @@
 # Text-to-SQL LLM
 
 > **Status: work in progress.** Started in November 2026 and actively developed.
-> Last updated: 2026-11-18. See the [roadmap](#roadmap) for what is done and what comes next.
+> Last updated: 2026-11-21. See the [roadmap](#roadmap) for what is done and what comes next.
 
 An end-to-end pipeline that translates natural-language questions into SQL queries, given the schema of a database. The core of the project is fine-tuning **Llama 3 8B** with **LoRA** so that the model learns to *read the schema it is given* instead of memorizing specific tables.
 
@@ -19,7 +19,7 @@ An end-to-end pipeline that translates natural-language questions into SQL queri
 - [x] Table definitions for both databases (`initdb.d/`)
 - [x] Populate the mock databases with data
 - [x] Write a set of reference queries (`queries_for_training.sql`)
-- [ ] Generate the synthetic training dataset (schema, question, SQL) and validate it by execution
+- [x] Generate the synthetic training dataset (schema, question, SQL) and validate it by execution
 - [ ] LoRA fine-tuning of Llama 3 8B (model + LoRA adapter setup started in `data_to_sql.py`)
 - [ ] Evaluation: base model vs. fine-tuned model (execution accuracy, held-out schema)
 - [ ] Serving with FastAPI + vLLM
@@ -42,44 +42,50 @@ Two PostgreSQL databases are used so the model sees different schemas. They are 
 
 | Table | Description |
 |---|---|
-| `customers` | login (PK), name, age, gender, address, company name (if representing a company) |
+| `customers` | login (PK), first_name, last_name, age, gender, address, company name (if representing a company) |
 | `products` | name (PK), price, release date, cost of production |
-| `transactions` | id (PK), product, customer, date, quantity |
+| `transactions` | id (PK), product, customer, date_of_transaction, quantity |
 
 **`subscriptions`**
 
 | Table           | Description                                                         |
 | --------------- | ------------------------------------------------------------------- |
-| `users`         | login (PK), name, age, gender, signup date                          |
+| `users`         | user_login (PK), first_name, last_name, age, gender, signup date                          |
 | `plans`         | name (PK), price, billing period (monthly, annual)         |
-| `subscriptions` | id (PK), user, start date, end date (`NULL` while active), plan     |
+| `subscriptions` | id (PK), user, start date, end date (`NULL` while active), plans_name     |
 | `payments`      | id (PK), subscription, payment method, status, payment date |
 
 Design choices: natural keys, `CHECK` constraints on prices, quantities and enumerated values (payment status, billing period, payment method), and PostgreSQL rather than SQLite to work with a realistic database engine.
 
 ## Tech stack
 
+## Tech stack
+
 | Used now | Planned |
 |---|---|
-| Python, PyTorch, Hugging Face Transformers, PEFT | TRL, Pandas (dataset generation) |
-| PostgreSQL 17, Docker Compose | vLLM, FastAPI |
-| Git / GitHub | SQLAlchemy |
+| Python, PyTorch, Hugging Face Transformers, PEFT | TRL (`SFTTrainer`) |
+| Pandas, `psycopg`, `pytest` | vLLM, FastAPI |
+| PostgreSQL 17, Docker Compose, Git / GitHub | SQLAlchemy |
+
+## Repository structure
 
 ## Repository structure
 
 ```
 .
-├── data_to_sql.py        # model loading + LoRA configuration (work in progress)
-├── docker-compose.yml    # PostgreSQL service
-├── initdb.d/             # database creation and table definitions, run at first startup
-├── populate.sql          # mock data (to do)
-├── queries.sql           # reference queries (to do)
-└── doc/PROJECT_NOTES.md  # design notes for the mock databases
+├── data_to_sql.py            # model loading + LoRA configuration (work in progress)
+├── pyproject.toml            # editable package config & pytest settings
+├── docker-compose.yml        # PostgreSQL service
+├── initdb.d/                 # database creation and table definitions, run at first startup
+├── queries_for_training.sql  # reference (question, SQL) seed queries
+├── dataset_pipeline/         # schema serializer, read-only sandbox, validator, Pandas prep & eval metrics
+├── tests/                    # unit tests & live PostgreSQL integration tests
+└── doc/PROJECT_NOTES.md      # design notes for the mock databases
 ```
 
 ## Getting started
 
-**Prerequisites:** Docker and Docker Compose.
+**Prerequisites:** Docker, Docker Compose, and Python 3.11+.
 
 1. Create a `.env` file at the root of the repository (it is gitignored), for example by copying `.env.example`:
 
@@ -87,6 +93,8 @@ Design choices: natural keys, `CHECK` constraints on prices, quantities and enum
    POSTGRES_DB=transactions
    POSTGRES_USER=<your_user>
    POSTGRES_PASSWORD=<your_password>
+   POSTGRES_PORT=<your_wanted_port>
+   POSTGRES_HOST=localhost
    ```
 
    `POSTGRES_DB` must be `transactions`: the official image creates that database at startup, and the scripts in `initdb.d/` then create the `subscriptions` database and connect to each one to create its tables.
@@ -97,13 +105,20 @@ Design choices: natural keys, `CHECK` constraints on prices, quantities and enum
    docker compose up -d
    ```
 
-3. Connect with any SQL client (e.g. DBeaver) on `localhost:5436`.
+3. Install the local pipeline package in editable mode and run the test suite:
+
+   ```bash
+   pip install -e . --no-build-isolation
+   pytest -v
+   ```
+
+4. Connect with any SQL client (e.g. DBeaver) on `localhost:5436`.
 
 > The scripts in `initdb.d/` only run the first time the volume is created. To rebuild the databases from scratch: `docker compose down -v && docker compose up -d`.
 
 ## Data
 
-Datasets and model artifacts are not versioned (`data/`, `*.csv`, `models/`, `checkpoints/` are gitignored). The scripts used to regenerate them will be documented here as they are written.
+Datasets and model artifacts are not versioned (data/, *.jsonl, *.parquet, *.csv, models/, checkpoints/ are gitignored). The scripts in dataset_pipeline/ used to serialize schemas, validate generated SQL against PostgreSQL, and build training/evaluation splits are tested under tests/.
 
 ## Results
 
