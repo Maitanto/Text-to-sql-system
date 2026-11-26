@@ -4,13 +4,13 @@ from datetime import date, timedelta
 import psycopg
 from faker import Faker
 from dotenv import load_dotenv
+from uuid import uuid4
+from concurrent import futures
+from random import Random
+
 
 SNAPSHOT_DATE = date(2026, 11, 19)
 load_dotenv()
-fake = Faker()
-fake.seed_instance(5861)
-random.seed(5861)
-
 
 def get_connection(db_name: str):
     return psycopg.connect(
@@ -26,7 +26,7 @@ def get_connection(db_name: str):
 # DATABASE 1: TRANSACTIONS GENERATORS
 # ==========================================
 
-def generate_customers(count: int) -> list[tuple]:
+def generate_customers(count: int, random: Random, fake: Faker) -> list[tuple]:
     customers = []
     for i in range(count):
         gender = random.choice(["F", "M"])
@@ -40,7 +40,7 @@ def generate_customers(count: int) -> list[tuple]:
     return customers
 
 
-def generate_products() -> list[tuple]:
+def generate_products(random: Random, fake: Faker) -> list[tuple]:
 
     products = []
     prod_names = ["Monitor", "Keyboard", "Mouse", "Webcam", "Router", "SSD",
@@ -48,10 +48,9 @@ def generate_products() -> list[tuple]:
                               "Desk", "Chair", "Lamp", "Bookshelf", "Organizer", "USB-C Hub",
                               "Laptop Stand", "Charger", "Backpack", "Case"]
     for name in prod_names:
-        parent_date = fake.date_between_dates(
-            date_start=date(2022, 1, 1),
-            date_end=SNAPSHOT_DATE,
-        )
+        start=date(2022, 1, 1)
+        end=SNAPSHOT_DATE
+        parent_date = start + timedelta(days=random.randint(0, (end - start).days))
         price = round(random.uniform(1.00, 9999.99), 2)
         products.append((name,
                         price,
@@ -60,16 +59,15 @@ def generate_products() -> list[tuple]:
     return products
 
 
-def generate_transactions(count: int, customers: list[tuple], products: list[tuple]) -> list[tuple]:
+def generate_transactions(count: int, customers: list[tuple], products: list[tuple], random: Random, fake: Faker) -> list[tuple]:
     transactions = []
     for i in range(count):
         product = products[random.randint(0, len(products)-1)]
         parent_date = product[2]
-        child_date = fake.date_between_dates(
-            date_start=parent_date,
-            date_end=SNAPSHOT_DATE,
-        )
-        transactions.append((fake.unique.uuid4(),
+        start=parent_date
+        end=SNAPSHOT_DATE
+        child_date = start + timedelta(days=random.randint(0, (end - start).days))
+        transactions.append((str(uuid4()),
                              product[0],
                              customers[random.randint(0, len(customers)-1)][0],
                              child_date,
@@ -81,13 +79,12 @@ def generate_transactions(count: int, customers: list[tuple], products: list[tup
 # DATABASE 2: SUBSCRIPTIONS GENERATORS
 # ==========================================
 
-def generate_users(count: int) -> list[tuple]:
+def generate_users(count: int, random: Random, fake: Faker) -> list[tuple]:
     users = []
     for i in range(count):
-        parent_date = fake.date_between_dates(
-                    date_start=date(2022, 1, 1),
-                    date_end=SNAPSHOT_DATE,
-        )
+        start=date(2022, 1, 1)
+        end=SNAPSHOT_DATE
+        parent_date = start + timedelta(days=random.randint(0, (end - start).days))
         gender = random.choice(["F", "M"])
         users.append((f"{fake.user_name()[:45]}_{i}",
                       fake.first_name_female()[:50] if gender == "F" else fake.first_name_male()[:50],
@@ -98,7 +95,7 @@ def generate_users(count: int) -> list[tuple]:
     return users
 
 
-def generate_plans() -> list[tuple]:
+def generate_plans(random: Random, fake: Faker) -> list[tuple]:
     plans = [
         ('Basic Monthly', 12.59, 'monthly'),
         ('Basic Annual', 139.08, 'annual'),
@@ -110,23 +107,21 @@ def generate_plans() -> list[tuple]:
     return plans
 
 
-def generate_subscriptions(count: int, users: list[tuple], plans: list[tuple]) -> list[tuple]:
+def generate_subscriptions(count: int, users: list[tuple], plans: list[tuple], random: Random, fake: Faker) -> list[tuple]:
     subscriptions = []
     for i in range(count):
         user = users[random.randint(0, len(users)-1)]
         parent_date = user[5]
-        child_date = fake.date_between_dates(
-            date_start=parent_date,
-            date_end=SNAPSHOT_DATE,
-        )
+        start=parent_date
+        end=SNAPSHOT_DATE
+        child_date = start + timedelta(days=random.randint(0, (end - start).days))
 
         parent_date2 = child_date
-        child_date2 = fake.date_between_dates(
-            date_start=parent_date2,
-            date_end=SNAPSHOT_DATE,
-        )
+        start=parent_date2
+        end=SNAPSHOT_DATE
+        child_date2 = start + timedelta(days=random.randint(0, (end - start).days))
 
-        subscriptions.append((fake.unique.uuid4(),
+        subscriptions.append((str(uuid4()),
                               user[0],
                               child_date,
                               child_date2 if random.random() > 0.5 else None,
@@ -134,19 +129,18 @@ def generate_subscriptions(count: int, users: list[tuple], plans: list[tuple]) -
     return subscriptions
 
 
-def generate_payments(count: int, subscriptions: list[tuple], plans: list[tuple]) -> list[tuple]:
+def generate_payments(count: int, subscriptions: list[tuple], plans: list[tuple], random: Random, fake: Faker) -> list[tuple]:
     payments = []
     p_methods = ['card', 'bank_transfer', 'paypal', 'apple_pay', 'google_pay', 'cash']
     status = ['paid', 'pending', 'cancelled', 'failed', 'refunded']
     for i in range(count):
         subscription = subscriptions[random.randint(0, len(subscriptions)-1)]
         parent_date = subscription[2]
-        child_date = fake.date_between_dates(
-            date_start=parent_date,
-            date_end=subscription[3],
-        )
+        start=parent_date
+        end=subscription[3] if subscription[3] != None else parent_date
+        child_date = start + timedelta(days=random.randint(0, (end - start).days))
         
-        payments.append((fake.unique.uuid4(),
+        payments.append((str(uuid4()),
                          subscription[0],
                          p_methods[random.randint(0, len(p_methods)-1)],
                          status[0] if random.random() > 0.2 else status[random.randint(1, len(status)-1)],
@@ -158,18 +152,29 @@ def generate_payments(count: int, subscriptions: list[tuple], plans: list[tuple]
 # ==========================================
 # EXECUTION & BATCH INSERTION
 # ==========================================
+def auto_copy(cur: psycopg.Cursor, table: str, columns: list[str], rows) -> None:
+    cols = ", ".join(columns)
+    with cur.copy(
+        f"COPY {table} ({cols}) FROM STDIN"
+    ) as copy:
+        for row in rows:
+            copy.write_row(row)
+
 
 def populate_transactions_db():
+    fake = Faker()
+    fake.seed_instance(5861)
+    random.seed(5861)
     conn = get_connection("transactions")
     try:
         with conn.cursor() as cur:
-            customers = generate_customers(10000)
-            products = generate_products()
-            transactions = generate_transactions(20000, customers, products)
+            customers = generate_customers(10000, random, fake)
+            products = generate_products(random, fake)
+            transactions = generate_transactions(20000, customers, products, random, fake)
             cur.execute("TRUNCATE TABLE TRANSACTIONS, CUSTOMERS, PRODUCTS CASCADE;")
-            cur.executemany("INSERT INTO CUSTOMERS (LOGIN, FIRST_NAME, LAST_NAME, AGE, GENDER, ADDRESS, COMPANY_NAME) VALUES (%s, %s, %s, %s, %s, %s, %s)", customers)
-            cur.executemany("INSERT INTO PRODUCTS (NAME, PRICE, RELEASE_DATE, COST_OF_PRODUCTION) VALUES (%s, %s, %s, %s)", products)
-            cur.executemany("INSERT INTO TRANSACTIONS (ID, PRODUCT_NAME, CUSTOMER_LOGIN, DATE_OF_TRANSACTION, QUANTITY) VALUES (%s, %s, %s, %s, %s)", transactions)
+            auto_copy(cur, "CUSTOMERS", ["LOGIN", "FIRST_NAME", "LAST_NAME", "AGE", "GENDER", "ADDRESS", "COMPANY_NAME"], customers)
+            auto_copy(cur, "PRODUCTS", ["NAME", "PRICE", "RELEASE_DATE", "COST_OF_PRODUCTION"], products)
+            auto_copy(cur, "TRANSACTIONS", ["ID", "PRODUCT_NAME", "CUSTOMER_LOGIN", "DATE_OF_TRANSACTION", "QUANTITY"], transactions)
         conn.commit()
         print("transactions DB populated successfully.")
     except Exception as e:
@@ -180,18 +185,21 @@ def populate_transactions_db():
 
 
 def populate_subscriptions_db():
+    fake = Faker()
+    fake.seed_instance(5861)
+    random.seed(5861)
     conn = get_connection("subscriptions")
     try:
         with conn.cursor() as cur:
-            users = generate_users(10000)
-            plans = generate_plans()
-            subscriptions = generate_subscriptions(15000, users, plans)
-            payments = generate_payments(30000, subscriptions, plans)
+            users = generate_users(10000, random, fake)
+            plans = generate_plans(random, fake)
+            subscriptions = generate_subscriptions(15000, users, plans, random, fake)
+            payments = generate_payments(30000, subscriptions, plans, random, fake)
             cur.execute("TRUNCATE TABLE PAYMENTS, SUBSCRIPTIONS, USERS, PLANS CASCADE;")
-            cur.executemany("INSERT INTO USERS (LOGIN, FIRST_NAME, LAST_NAME, AGE, GENDER, SIGNUP_DATE) VALUES (%s, %s, %s, %s, %s, %s)", users)
-            cur.executemany("INSERT INTO PLANS (NAME, PRICE, BILLING_PERIOD) VALUES (%s, %s, %s)", plans)
-            cur.executemany("INSERT INTO SUBSCRIPTIONS (ID, USER_LOGIN, START_DATE, END_DATE, PLANS_NAME) VALUES (%s, %s, %s, %s, %s)", subscriptions)
-            cur.executemany("INSERT INTO PAYMENTS (ID, SUBSCRIPTION_ID, PAYMENT_METHOD, STATUS, PAYMENT_DATE) VALUES (%s, %s, %s, %s, %s)", payments)
+            auto_copy(cur, "USERS", ["LOGIN", "FIRST_NAME", "LAST_NAME", "AGE", "GENDER", "SIGNUP_DATE"], users)
+            auto_copy(cur, "PLANS", ["NAME", "PRICE", "BILLING_PERIOD"], plans)
+            auto_copy(cur, "SUBSCRIPTIONS", ["ID", "USER_LOGIN", "START_DATE", "END_DATE", "PLANS_NAME"], subscriptions)
+            auto_copy(cur, "PAYMENTS", ["ID", "SUBSCRIPTION_ID", "PAYMENT_METHOD", "STATUS", "PAYMENT_DATE"], payments)
 
         conn.commit()
         print("subscriptions DB populated successfully.")
@@ -203,5 +211,10 @@ def populate_subscriptions_db():
 
 
 if __name__ == "__main__":
-    populate_transactions_db()
-    populate_subscriptions_db()
+    with futures.ThreadPoolExecutor(max_workers=2) as executor:
+        future1 = executor.submit(populate_transactions_db)
+        future2 = executor.submit(populate_subscriptions_db)
+        future1.result()
+        future2.result()
+        
+        
