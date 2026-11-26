@@ -59,15 +59,11 @@ Design choices: natural keys, `CHECK` constraints on prices, quantities and enum
 
 ## Tech stack
 
-## Tech stack
-
 | Used now | Planned |
 |---|---|
 | Python, PyTorch, Hugging Face Transformers, PEFT | TRL (`SFTTrainer`) |
 | Pandas, `psycopg`, `pytest` | vLLM, FastAPI |
 | PostgreSQL 17, Docker Compose, Git / GitHub | SQLAlchemy |
-
-## Repository structure
 
 ## Repository structure
 
